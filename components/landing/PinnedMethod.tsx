@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { PIPELINE } from "@/components/landing/landing-copy";
 
 export function PinnedMethod() {
@@ -58,18 +58,10 @@ function ScrubMethod() {
             <div className="mt-3 h-px w-40 overflow-hidden bg-border">
               <motion.div className="h-full bg-brass" style={{ width: bar }} />
             </div>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={stage.id}
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <h2 className="mt-5 font-serif text-4xl leading-[1.05] md:text-6xl">{stage.title}</h2>
-                <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">{stage.body}</p>
-              </motion.div>
-            </AnimatePresence>
+            <div key={stage.id} className="ledger-fade">
+              <h2 className="mt-5 font-serif text-4xl leading-[1.05] md:text-6xl">{stage.title}</h2>
+              <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">{stage.body}</p>
+            </div>
             <ol className="mt-8 flex flex-wrap gap-2" aria-label="Pipeline stages">
               {PIPELINE.map((item, itemIndex) => (
                 <li key={item.id}>
@@ -95,18 +87,9 @@ function StagePlate({ index }: { index: number }) {
   return (
     <div className="panel relative min-h-[420px] overflow-hidden p-6 md:p-8" aria-hidden>
       <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(to right, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={index}
-          className="relative"
-          initial={{ opacity: 0, filter: "blur(6px)" }}
-          animate={{ opacity: 1, filter: "blur(0px)" }}
-          exit={{ opacity: 0, filter: "blur(6px)" }}
-          transition={{ duration: 0.35 }}
-        >
-          <Plate index={index} />
-        </motion.div>
-      </AnimatePresence>
+      <div key={index} className="ledger-fade relative">
+        <Plate index={index} />
+      </div>
     </div>
   );
 }
@@ -117,16 +100,10 @@ function Plate({ index }: { index: number }) {
       <div className="grid gap-3">
         <p className="kicker">Incoming</p>
         {["Final bill · 6 pages", "Policy schedule · 4 pages", "Discharge summary · 3 pages", "Ultrasound report · 2 pages"].map((file, i) => (
-          <motion.div
-            key={file}
-            initial={{ x: 24, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: i * 0.06 }}
-            className="flex items-center justify-between rounded-xl border border-border bg-black/30 px-4 py-3 text-sm"
-          >
+          <div key={file} className="ledger-fade flex items-center justify-between rounded-xl border border-border bg-black/30 px-4 py-3 text-sm" style={{ animationDelay: `${i * 0.06}s` }}>
             <span>{file}</span>
             <span className="font-mono text-[10px] text-sage">accepted</span>
-          </motion.div>
+          </div>
         ))}
       </div>
     );

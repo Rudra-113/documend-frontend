@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { MARQUEE } from "@/components/landing/landing-copy";
 
 const WORDS = ["Read", "the", "bill."];
@@ -44,52 +44,26 @@ export function HeroStage() {
       />
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <div>
-          <motion.p
-            className="kicker"
-            initial={reduce ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <p className="ledger-fade kicker" style={{ animationDelay: "0.05s" }}>
             Forensic bill review
-          </motion.p>
+          </p>
           <h1 className="mt-5 max-w-xl font-serif tracking-tight">
             <span className="block overflow-hidden text-6xl leading-[0.92] md:text-8xl">
               {WORDS.map((word, index) => (
-                <motion.span
-                  key={word}
-                  className="inline-block"
-                  initial={reduce ? false : { y: "110%" }}
-                  animate={{ y: "0%" }}
-                  transition={{ duration: 0.8, delay: 0.08 * index, ease: [0.16, 1, 0.3, 1] }}
-                >
+                <span key={word} className="ledger-rise inline-block" style={{ animationDelay: `${0.08 * index}s` }}>
                   {word}
                   {index < WORDS.length - 1 ? "\u00A0" : ""}
-                </motion.span>
+                </span>
               ))}
             </span>
-            <motion.span
-              className="mt-4 block text-4xl leading-tight italic text-foreground/90 md:text-6xl"
-              initial={reduce ? false : { opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <span className="ledger-fade mt-4 block text-4xl leading-tight italic text-foreground/90 md:text-6xl" style={{ animationDelay: "0.28s" }}>
               Then make it defend itself.
-            </motion.span>
+            </span>
           </h1>
-          <motion.p
-            className="mt-6 max-w-lg text-base leading-7 text-foreground/80"
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.55, duration: 0.7 }}
-          >
+          <p className="ledger-fade mt-6 max-w-lg text-base leading-7 text-foreground/80" style={{ animationDelay: "0.42s" }}>
             DocuMend Ledger lines a hospital bill up with the policy, the discharge summary, the prescription, the reports, and the receipts. Duplicates, odd quantities, contradictions, missing records, and unpaid lines stay pinned to the page they came from.
-          </motion.p>
-          <motion.div
-            className="mt-8 flex flex-col gap-3 sm:flex-row"
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-          >
+          </p>
+          <div className="ledger-fade mt-8 flex flex-col gap-3 sm:flex-row" style={{ animationDelay: "0.55s" }}>
             <a
               href="#open"
               className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm text-primary-foreground hover:bg-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -102,30 +76,24 @@ export function HeroStage() {
             >
               Scroll the method
             </a>
-          </motion.div>
+          </div>
         </div>
 
         <div className="relative [perspective:1200px]" onPointerMove={onMove} onPointerLeave={onLeave}>
-          <motion.div
+          <div
             aria-hidden
             className="ledger-float absolute -top-8 left-8 z-20 hidden rounded-2xl border border-brass/40 bg-background/90 px-3 py-2 text-xs shadow-xl backdrop-blur-md sm:block"
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
           >
             <p className="font-mono text-[10px] tracking-widest text-brass uppercase">Policy</p>
             <p className="mt-1">Room cap ₹8,000</p>
-          </motion.div>
-          <motion.div
+          </div>
+          <div
             aria-hidden
             className="ledger-float-late absolute -right-2 -bottom-8 z-20 hidden rounded-2xl border border-clay/40 bg-background/90 px-3 py-2 text-xs shadow-xl backdrop-blur-md sm:block"
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
           >
             <p className="font-mono text-[10px] tracking-widest text-clay uppercase">Discharge</p>
             <p className="mt-1">Room vacated 11:40</p>
-          </motion.div>
+          </div>
           <div
             ref={tilt}
             className="panel relative overflow-hidden p-5 transition-transform duration-200 ease-out will-change-transform md:p-6"

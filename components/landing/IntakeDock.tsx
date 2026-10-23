@@ -29,8 +29,8 @@ export function IntakeDock({
     <section id="open" className="scroll-mt-24 px-4 py-20 md:px-6">
       <motion.div
         className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]"
-        initial={reduce ? false : { opacity: 0, y: 32 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={false}
+        whileInView={reduce ? undefined : { y: [12, 0] }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       >
@@ -93,8 +93,8 @@ export function CaseIndex({
             {cases.map((item, index) => (
               <motion.li
                 key={item.id}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={false}
+                whileInView={{ y: [8, 0] }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.04 }}
               >

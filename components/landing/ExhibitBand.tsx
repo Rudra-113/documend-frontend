@@ -40,21 +40,19 @@ export function ExhibitBand({ onSample, submitting }: { onSample: () => void; su
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="kicker">Bill intelligence</p>
-              <p className="mt-2 font-serif text-6xl">{play ? <CountUp to={SPECIMEN.score} run={play} instant={Boolean(reduce)} /> : "00"}</p>
+              <p className="mt-2 font-serif text-6xl">
+                <CountUp to={SPECIMEN.score} run={play} instant={Boolean(reduce)} />
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">Review before submission</p>
             </div>
-            <Ring value={play ? SPECIMEN.score : 0} animate={play && !reduce} />
+            <Ring value={SPECIMEN.score} animate={play && !reduce} />
           </div>
           <dl className="mt-8 grid grid-cols-2 gap-4">
             {FIGURES.map((figure) => (
               <div key={figure.label} className="border-t border-border pt-3">
                 <dt className="kicker">{figure.label}</dt>
                 <dd className="mt-2 font-mono text-lg">
-                  {play ? (
-                    <CountUp to={figure.value} run={play} instant={Boolean(reduce)} money={figure.money} />
-                  ) : (
-                    "—"
-                  )}
+                  <CountUp to={figure.value} run={play} instant={Boolean(reduce)} money={figure.money} />
                 </dd>
               </div>
             ))}
@@ -67,7 +65,7 @@ export function ExhibitBand({ onSample, submitting }: { onSample: () => void; su
 }
 
 function CountUp({ to, run, instant, money = false }: { to: number; run: boolean; instant: boolean; money?: boolean }) {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(to);
   useEffect(() => {
     if (!run) return;
     if (instant) {

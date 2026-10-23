@@ -94,8 +94,8 @@ function SignalCard({
 }) {
   return (
     <motion.article
-      initial={wide ? false : { opacity: 0, y: 28 }}
-      whileInView={wide ? undefined : { opacity: 1, y: 0 }}
+      initial={false}
+      whileInView={wide ? undefined : { y: [16, 0] }}
       viewport={{ once: true, amount: 0.35 }}
       transition={{ delay: index * 0.05, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
       whileHover={wide ? { y: -8 } : undefined}
