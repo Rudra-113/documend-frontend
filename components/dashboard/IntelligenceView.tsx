@@ -2,6 +2,12 @@ import type { CaseResults, Finding } from "@/lib/types/domain";
 import { formatDay, formatINR, formatINROrDash, formatPercent, formatStamp } from "@/lib/utils/format";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 
+function showDate(value: string | null) {
+  if (!value) return "—";
+  if (/^\d{4}-\d{2}-\d{2}/.test(value)) return formatStamp(value);
+  return value;
+}
+
 function FaceRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-b border-border py-2.5">
@@ -58,10 +64,22 @@ export function IntelligenceView({
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {ledger ? (
             <>
-              <MetricCard label="Bill total" value={formatINROrDash(estimated ? ledger.billTotal : null)} hint={`${ledger.documentCount} document${ledger.documentCount === 1 ? "" : "s"} on this case`} />
-              <MetricCard label="Copay" value={formatPercent(estimated ? ledger.copayPercent : null)} hint={ledger.status === "estimated" ? "Returned copay" : "Not estimated"} />
-              <MetricCard label="Estimated insurance share" value={formatINROrDash(estimated ? ledger.insuranceShare : null)} tone="sage" />
-              <MetricCard label="Estimated patient share" value={formatINROrDash(estimated ? ledger.patientShare : null)} tone="brass" />
+              <MetricCard
+                label="Bill total"
+                value={formatINROrDash(ledger.billTotal)}
+                hint={ledger.billTotal == null ? "Not estimated" : estimated ? "Returned bill total" : "From the hospital bill"}
+              />
+              <MetricCard label="Copay" value={estimated ? formatPercent(ledger.copayPercent) : "Not estimated"} hint={estimated ? "Returned copay" : "Not estimated"} />
+              <MetricCard
+                label="Estimated insurance share"
+                value={estimated ? formatINROrDash(ledger.insuranceShare) : "Not estimated"}
+                tone="sage"
+              />
+              <MetricCard
+                label="Estimated patient share"
+                value={estimated ? formatINROrDash(ledger.patientShare) : "Not estimated"}
+                tone="brass"
+              />
             </>
           ) : (
             <>
@@ -84,8 +102,8 @@ export function IntelligenceView({
           <dl className="mt-4 grid gap-x-8 sm:grid-cols-2">
             <FaceRow label="Facility" value={face.facility ? `${face.facility}${face.facilityCity ? `, ${face.facilityCity}` : ""}` : "—"} />
             <FaceRow label="UHID" value={face.uhid ?? "—"} />
-            <FaceRow label="Admission" value={face.admissionAt ? formatStamp(face.admissionAt) : "—"} />
-            <FaceRow label="Discharge" value={face.dischargeAt ? formatStamp(face.dischargeAt) : "—"} />
+            <FaceRow label="Admission" value={showDate(face.admissionAt)} />
+            <FaceRow label="Discharge" value={showDate(face.dischargeAt)} />
             <FaceRow label="Stay" value={face.lengthOfStayNights != null ? `${face.lengthOfStayNights} nights` : "—"} />
             <FaceRow label="Room" value={face.roomCategory ?? "—"} />
             <FaceRow label="Diagnosis" value={face.diagnosis ?? "—"} />
@@ -130,7 +148,7 @@ export function IntelligenceView({
                     const linked = findings.filter((finding) => line.findingIds.includes(finding.id));
                     return (
                       <tr key={line.id} className="border-b border-border/80 align-top">
-                        <td className="px-5 py-3 font-mono text-xs whitespace-nowrap">{formatDay(line.serviceDate)}</td>
+                        <td className="px-5 py-3 font-mono text-xs whitespace-nowrap">{line.serviceDate ? formatDay(line.serviceDate) : "—"}</td>
                         <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{line.code}</td>
                         <td className="px-3 py-3">
                           {line.description}
@@ -139,7 +157,7 @@ export function IntelligenceView({
                         <td className="px-3 py-3 text-right font-mono text-xs">
                           {line.quantity} {line.unit}
                         </td>
-                        <td className="px-3 py-3 text-right font-mono">{formatINR(line.amount)}</td>
+                        <td className="px-3 py-3 text-right font-mono">{line.amount ? formatINR(line.amount) : "—"}</td>
                         <td className="px-5 py-3">
                           {linked.length === 0 ? (
                             <span className="text-xs text-muted-foreground">Clear</span>

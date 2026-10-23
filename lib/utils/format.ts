@@ -27,8 +27,10 @@ export function formatBytes(bytes: number) {
 }
 
 export function formatDay(isoDate: string) {
+  if (!isoDate) return "—";
   const date =
     isoDate.length === 10 ? new Date(`${isoDate}T12:00:00+05:30`) : new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return isoDate;
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: "Asia/Kolkata",
     day: "2-digit",

@@ -53,8 +53,26 @@ export interface DocumentRecord {
   typeLabel?: string | null;
   classificationConfidence: number | null;
   processingState?: string | null;
+  extraction?: DocumentExtraction | null;
   addedAt: string;
   analysisVersion: number | null;
+}
+
+export interface ExtractedItem {
+  description: string;
+  quantity: number | null;
+  unitPrice: number | null;
+  amount: number | null;
+}
+
+export interface DocumentExtraction {
+  total: number | null;
+  dates: string[];
+  items: ExtractedItem[];
+  diagnosis: string | null;
+  procedures: string[];
+  patientName: string | null;
+  facility: string | null;
 }
 
 export interface PipelineStage {

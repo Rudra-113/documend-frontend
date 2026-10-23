@@ -8,6 +8,7 @@ import {
   getInsurance as getInsuranceRequest,
   uploadDocument,
 } from "@/lib/api/fastapi";
+import { asRecord, documentNodes, extractionFrom, numberOf, textOf, unwrapDocument } from "@/lib/api/normalize";
 import type { LedgerApi } from "@/lib/mock/api";
 import type {
   AskResponse,
@@ -20,6 +21,7 @@ import type {
   Finding,
   FindingType,
   InsuranceAssessment,
+  LineItem,
   LiveLedgerFigures,
   PatientFace,
   PipelineEvent,
@@ -72,25 +74,6 @@ interface Session {
 const sessions = new Map<string, Session>();
 const evidenceByFinding = new Map<string, EvidenceBundle>();
 const findingIdsByCase = new Map<string, string[]>();
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
-}
-
-function textOf(record: Record<string, unknown> | null, keys: string[]) {
-  if (!record) return null;
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return null;
-}
-
-function numberOf(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
-  return null;
-}
 
 function humanize(value: string) {
   return value
@@ -235,8 +218,9 @@ function fingerprintOf(documents: DocumentRecord[]) {
 }
 
 function toDocument(value: unknown, caseId: string, index: number, fallback?: File): DocumentRecord {
-  const record = asRecord(value);
+  const record = unwrapDocument(value);
   const extracted = asRecord(record?.extracted_data);
+  const extraction = extractionFrom(record);
   const filename =
     textOf(record, ["filename", "file_name", "name", "original_filename"]) ?? fallback?.name ?? `document-${index + 1}.pdf`;
   const rawType = textOf(extracted, ["document_type", "type"]) ?? textOf(record, ["document_type"]);
@@ -255,20 +239,14 @@ function toDocument(value: unknown, caseId: string, index: number, fallback?: Fi
     typeLabel: mapped.typeLabel,
     classificationConfidence: null,
     processingState: textOf(record, ["processing_state", "processingState", "state", "status"]),
+    extraction,
     addedAt: textOf(record, ["created_at", "added_at", "uploaded_at"]) ?? new Date().toISOString(),
     analysisVersion: null,
   };
 }
 
 function documentsFrom(payload: unknown, caseId: string, fallback?: File) {
-  const record = asRecord(payload);
-  const list = Array.isArray(payload)
-    ? payload
-    : Array.isArray(record?.documents)
-      ? (record.documents as unknown[])
-      : record && (record.filename || record.file_name || record.name || record.extracted_data)
-        ? [record]
-        : [];
+  const list = documentNodes(payload);
   if (list.length === 0 && fallback) return [toDocument(null, caseId, 0, fallback)];
   return list.map((item, index) => toDocument(item, caseId, index, list.length === 1 ? fallback : undefined));
 }
@@ -357,6 +335,60 @@ function toLedger(payload: unknown, documentCount: number): LiveLedgerFigures {
   };
 }
 
+function billSource(documents: DocumentRecord[]) {
+  return (
+    documents.find((document) => document.type === "hospital_bill" && document.extraction) ??
+    documents.find((document) => document.extraction && (document.extraction.total != null || document.extraction.items.length > 0)) ??
+    null
+  );
+}
+
+function withBillTotal(ledger: LiveLedgerFigures | null | undefined, documents: DocumentRecord[]) {
+  if (!ledger) return null;
+  const extracted = billSource(documents)?.extraction?.total ?? null;
+  return { ...ledger, billTotal: ledger.billTotal ?? extracted };
+}
+
+function faceFrom(documents: DocumentRecord[]): PatientFace {
+  const extraction = billSource(documents)?.extraction;
+  const face = emptyPatient();
+  if (!extraction) return face;
+  return {
+    ...face,
+    name: extraction.patientName,
+    facility: extraction.facility,
+    admissionAt: extraction.dates[0] ?? null,
+    dischargeAt: extraction.dates[1] ?? null,
+    diagnosis: extraction.diagnosis,
+    procedure: extraction.procedures.length > 0 ? extraction.procedures.join(", ") : null,
+  };
+}
+
+function lineItemsFrom(documents: DocumentRecord[]): LineItem[] {
+  const lines: LineItem[] = [];
+  for (const document of documents) {
+    const items = document.extraction?.items ?? [];
+    const serviceDate = document.extraction?.dates[0] ?? "";
+    items.forEach((item, index) => {
+      lines.push({
+        id: `${document.id}:item:${index}`,
+        code: "—",
+        description: item.description,
+        category: "—",
+        serviceDate,
+        quantity: item.quantity ?? 0,
+        unit: "",
+        rate: item.unitPrice ?? 0,
+        amount: item.amount ?? 0,
+        sourceDocumentId: document.id,
+        page: document.pageCount && document.pageCount > 0 ? 1 : 1,
+        findingIds: [],
+      });
+    });
+  }
+  return lines;
+}
+
 function emptyPatient(): PatientFace {
   return {
     name: null,
@@ -421,16 +453,16 @@ function toInsurance(payload: unknown, caseId: string, version: number, document
 }
 
 function toResults(session: Session): CaseResults {
-  const ledger = session.insurance?.ledger ?? null;
+  const ledger = withBillTotal(session.insurance?.ledger, session.documents);
   const estimated = ledger?.status === "estimated";
   const limitations = [ledger?.disclaimer, ledger?.message].filter((item, index, all): item is string => Boolean(item) && all.indexOf(item) === index);
   return {
     caseId: session.id,
     analysisVersion: session.version,
     generatedAt: session.updatedAt,
-    patient: emptyPatient(),
+    patient: faceFrom(session.documents),
     totals: {
-      billed: estimated && ledger?.billTotal != null ? ledger.billTotal : 0,
+      billed: ledger?.billTotal ?? 0,
       admissible: 0,
       nonPayable: 0,
       underReview: 0,
@@ -446,7 +478,7 @@ function toResults(session: Session): CaseResults {
       ledgerNarrative(ledger ?? { status: session.analysisStatus ?? "complete", billTotal: null, copayPercent: null, insuranceShare: null, patientShare: null, disclaimer: null, message: null, documentCount: session.documentCount }) +
       ` ${session.documentCount} document${session.documentCount === 1 ? "" : "s"} on this case.`,
     breakdown: [],
-    lineItems: [],
+    lineItems: lineItemsFrom(session.documents),
     documentIds: session.documents.map((document) => document.id),
     limitations,
   };
@@ -565,11 +597,11 @@ function summaryOf(session: Session): CaseSummary {
     updatedAt: session.updatedAt,
     phase: session.job || isProcessing(session.analysisStatus) ? "processing" : session.phase,
     documentCount: session.documentCount,
-    patientName: null,
-    facility: null,
+    patientName: faceFrom(session.documents).name,
+    facility: faceFrom(session.documents).facility,
     score: null,
     scoreLabel: null,
-    billed: ledger?.status === "estimated" ? ledger.billTotal : null,
+    billed: withBillTotal(ledger, session.documents)?.billTotal ?? null,
     analysisVersion: session.version,
     stale: session.stale,
   };
@@ -821,6 +853,9 @@ export const httpApi: LedgerApi = {
     try {
       const payload = await getInsuranceRequest(caseId);
       session.insurance = toInsurance(payload, caseId, session.version, session.documentCount);
+      if (session.insurance.ledger) {
+        session.insurance.ledger = withBillTotal(session.insurance.ledger, session.documents) ?? session.insurance.ledger;
+      }
     } catch (error) {
       if (!session.insurance) throw polish(error, "Insurance could not be loaded.");
     }

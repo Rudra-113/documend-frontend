@@ -28,18 +28,22 @@ export function InsuranceView({
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{insurance.narrative}</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Bill total" value={formatINROrDash(estimated ? ledger.billTotal : null)} hint={estimated ? "Returned bill total" : "Not estimated"} />
-          <MetricCard label="Copay" value={formatPercent(estimated ? ledger.copayPercent : null)} hint={estimated ? "Returned copay" : "Not estimated"} />
+          <MetricCard
+            label="Bill total"
+            value={formatINROrDash(ledger.billTotal)}
+            hint={ledger.billTotal == null ? "Not estimated" : estimated ? "Returned bill total" : "From the hospital bill"}
+          />
+          <MetricCard label="Copay" value={estimated ? formatPercent(ledger.copayPercent) : "Not estimated"} hint={estimated ? "Returned copay" : "Not estimated"} />
           <MetricCard
             label="Estimated insurance share"
-            value={formatINROrDash(estimated ? ledger.insuranceShare : null)}
-            hint={estimated ? "Returned by the ledger" : "Waiting on the required documents"}
+            value={estimated ? formatINROrDash(ledger.insuranceShare) : "Not estimated"}
+            hint={estimated ? "Returned by the ledger" : "Not estimated"}
             tone="sage"
           />
           <MetricCard
             label="Estimated patient share"
-            value={formatINROrDash(estimated ? ledger.patientShare : null)}
-            hint={estimated ? "Returned by the ledger" : "Waiting on the required documents"}
+            value={estimated ? formatINROrDash(ledger.patientShare) : "Not estimated"}
+            hint={estimated ? "Returned by the ledger" : "Not estimated"}
             tone="brass"
           />
         </div>
