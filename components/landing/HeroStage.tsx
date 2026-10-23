@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { MARQUEE } from "@/components/landing/landing-copy";
 
 const WORDS = ["Read", "the", "bill."];
@@ -17,6 +17,11 @@ const LINES = [
 export function HeroStage() {
   const reduce = useReducedMotion();
   const tilt = useRef<HTMLDivElement>(null);
+  const section = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: section, offset: ["start start", "end start"] });
+  const yCopy = useTransform(scrollYProgress, [0, 1], [0, -90]);
+  const yBill = useTransform(scrollYProgress, [0, 1], [0, 70]);
+  const cue = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
 
   function onMove(event: React.PointerEvent<HTMLDivElement>) {
     if (reduce || event.pointerType !== "mouse") return;
@@ -33,7 +38,7 @@ export function HeroStage() {
   }
 
   return (
-    <section className="relative flex min-h-[100svh] items-center px-4 pt-24 pb-16 md:px-6">
+    <section id="hero" ref={section} className="relative flex min-h-[100svh] items-center px-4 pt-24 pb-16 md:px-6">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-70"
@@ -43,7 +48,7 @@ export function HeroStage() {
         }}
       />
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <div>
+        <motion.div style={reduce ? undefined : { y: yCopy }}>
           <p className="ledger-fade kicker" style={{ animationDelay: "0.05s" }}>
             Forensic bill review
           </p>
@@ -59,6 +64,7 @@ export function HeroStage() {
             <span className="ledger-fade mt-4 block text-4xl leading-tight italic text-foreground/90 md:text-6xl" style={{ animationDelay: "0.28s" }}>
               Then make it defend itself.
             </span>
+            <span className="ledger-rule mt-5 block h-px w-36 bg-brass/70" />
           </h1>
           <p className="ledger-fade mt-6 max-w-lg text-base leading-7 text-foreground/80" style={{ animationDelay: "0.42s" }}>
             DocuMend Ledger lines a hospital bill up with the policy, the discharge summary, the prescription, the reports, and the receipts. Duplicates, odd quantities, contradictions, missing records, and unpaid lines stay pinned to the page they came from.
@@ -77,9 +83,9 @@ export function HeroStage() {
               Scroll the method
             </a>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="relative [perspective:1200px]" onPointerMove={onMove} onPointerLeave={onLeave}>
+        <motion.div className="relative [perspective:1200px]" style={reduce ? undefined : { y: yBill }} onPointerMove={onMove} onPointerLeave={onLeave}>
           <div
             aria-hidden
             className="ledger-float absolute -top-8 left-8 z-20 hidden rounded-2xl border border-brass/40 bg-background/90 px-3 py-2 text-xs shadow-xl backdrop-blur-md sm:block"
@@ -126,15 +132,16 @@ export function HeroStage() {
               <div aria-hidden className="ledger-scan pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-transparent via-brass/25 to-transparent" />
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
-      <a
+      <motion.a
         href="#method"
+        style={reduce ? undefined : { opacity: cue }}
         className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[10px] tracking-[0.2em] text-muted-foreground uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring md:flex"
       >
         Scroll
         <span aria-hidden className="ledger-pulse h-8 w-px bg-foreground/40" />
-      </a>
+      </motion.a>
     </section>
   );
 }
@@ -148,6 +155,14 @@ export function DocumentMarquee() {
           <span key={`${item}-${index}`} className="font-mono text-[11px] tracking-[0.22em] text-muted-foreground uppercase">
             {item}
             <span className="mx-10 text-brass/80">/</span>
+          </span>
+        ))}
+      </div>
+      <div className="ledger-marquee-reverse mt-3 flex w-max gap-10 pr-10">
+        {row.map((item, index) => (
+          <span key={`back-${item}-${index}`} className="font-mono text-[11px] tracking-[0.22em] text-foreground/35 uppercase">
+            {item}
+            <span className="mx-10 text-steel/80">/</span>
           </span>
         ))}
       </div>

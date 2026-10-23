@@ -6,6 +6,7 @@ import { HeroStage, DocumentMarquee } from "@/components/landing/HeroStage";
 import { CaseIndex, IntakeDock } from "@/components/landing/IntakeDock";
 import { LandingNav, ScrollProgress } from "@/components/landing/LandingNav";
 import { PinnedMethod } from "@/components/landing/PinnedMethod";
+import { ChapterRail, DriftGrid, PageFan, StatementScrub } from "@/components/landing/ScrollScenes";
 import { SignalRail } from "@/components/landing/SignalRail";
 import type { QueuedFile } from "@/components/upload/UploadDropzone";
 
@@ -34,12 +35,16 @@ export function LandingExperience({
 }) {
   return (
     <div className="relative flex flex-1 flex-col">
+      <DriftGrid />
       <ScrollProgress />
       <LandingNav mode={mode} />
-      <main id="content">
+      <ChapterRail />
+      <main id="content" className="relative z-10">
         <HeroStage />
         <DocumentMarquee />
+        <StatementScrub />
         <PinnedMethod />
+        <PageFan />
         <SignalRail />
         <ExhibitBand onSample={onSample} submitting={submitting} />
         <IntakeDock queue={queue} onChange={onChange} submitting={submitting} error={error} onBegin={onBegin} onSample={onSample} />
