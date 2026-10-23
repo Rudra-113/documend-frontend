@@ -36,6 +36,9 @@ export function DocumentsView({
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {documents.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No documents on this case yet.</p>
+        ) : null}
         {documents.map((document) => (
           <DocumentCard
             key={document.id}
@@ -72,7 +75,7 @@ export function DocumentsView({
               });
           }}
         >
-          {busy ? "Adding…" : `Add ${queue.length || ""}`.trim()}
+          {busy ? "Uploading..." : `Add ${queue.length || ""}`.trim()}
         </Button>
       </div>
     </div>

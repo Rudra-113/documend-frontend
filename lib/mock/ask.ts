@@ -42,7 +42,7 @@ export function answerQuestion(question: string, output: AnalysisOutput, stale: 
       return {
         text: `${finding.summary} ${finding.recommendation}`,
         citations: cite(slug),
-        confidence: finding.confidence,
+        confidence: finding.confidence ?? 0.5,
       };
     };
 
@@ -118,7 +118,7 @@ export function answerQuestion(question: string, output: AnalysisOutput, stale: 
       return {
         text: parts.map((item) => item!.summary).join(" "),
         citations: parts.flatMap((item) => citationsFrom(item!.id, evidence, 1)),
-        confidence: Math.max(...parts.map((item) => item!.confidence)),
+        confidence: Math.max(...parts.map((item) => item!.confidence ?? 0)),
       };
     }
     if (/why|isn.?t|not paying|refus|denied|won.?t pay/.test(text)) {

@@ -56,7 +56,7 @@ export function AuditReport({
         <section className="mt-6">
           <p className="text-xs tracking-[0.16em] uppercase opacity-60">Opinion</p>
           <p className="mt-2 font-serif text-4xl">
-            {results.score}
+            {results.score ?? "—"}
             <span className="ml-3 text-lg">{results.scoreLabel}</span>
           </p>
           <p className="mt-3 text-sm leading-6">{results.narrative}</p>

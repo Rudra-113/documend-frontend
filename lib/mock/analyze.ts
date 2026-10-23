@@ -988,7 +988,7 @@ export function analyzeCase(caseId: string, version: number, documents: Document
     evidenced.length === 0
       ? 35
       : clampScore(
-          (evidenced.reduce((sum, finding) => sum + finding.confidence, 0) / evidenced.length) * 100,
+          (evidenced.reduce((sum, finding) => sum + (finding.confidence ?? 0), 0) / evidenced.length) * 100,
         );
 
   const breakdown: ScoreBreakdown[] = [
@@ -1309,7 +1309,7 @@ function buildEvents(
     push("cross_check", `${missing.length} expected document${missing.length === 1 ? "" : "s"} still absent`, "attention");
   }
 
-  push("audit", `Bill intelligence ${results.score} · ${results.scoreLabel}`, results.score >= 70 ? "clear" : "attention");
+  push("audit", `Bill intelligence ${results.score ?? "—"} · ${results.scoreLabel}`, results.score != null && results.score >= 70 ? "clear" : "attention");
 
   if (results.totals.billed === 0) {
     push("insurance", "Nothing to price.", "attention");

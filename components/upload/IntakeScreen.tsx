@@ -17,19 +17,21 @@ export function IntakeScreen() {
   const [error, setError] = useState<string | null>(null);
   const mode = apiMode();
 
-  async function openCase(files: QueuedFile[]) {
+  async function openCase(files: QueuedFile[], analyze: boolean) {
     setSubmitting(true);
     setError(null);
     let caseId = "";
     try {
       const created = await api.createCase();
       caseId = created.id;
-      await api.addDocuments(
-        caseId,
-        files.map((item) => item.file),
-        files.map((item) => item.type),
-      );
-      await api.analyze(caseId);
+      if (files.length > 0) {
+        await api.addDocuments(
+          caseId,
+          files.map((item) => item.file),
+          files.map((item) => item.type),
+        );
+      }
+      if (analyze) await api.analyze(caseId);
       router.push(`/cases/${caseId}`);
     } catch (err) {
       setError(errorMessage(err, "The case could not be opened."));
@@ -39,6 +41,15 @@ export function IntakeScreen() {
     }
   }
 
+  function openSample() {
+    if (mode === "live") {
+      setError("The Meridian exhibit stays on this page. Open a case and upload the real PDFs.");
+      document.getElementById("open")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    void openCase(filesToQueue(meridianSampleFiles()), true);
+  }
+
   return (
     <LandingExperience
       mode={mode}
@@ -46,8 +57,9 @@ export function IntakeScreen() {
       onChange={setQueue}
       submitting={submitting}
       error={error}
-      onBegin={() => void openCase(queue)}
-      onSample={() => void openCase(filesToQueue(meridianSampleFiles()))}
+      onOpenCase={() => void openCase([], false)}
+      onBegin={() => void openCase(queue, true)}
+      onSample={openSample}
       cases={cases}
       listLoading={loading}
       listError={listError}

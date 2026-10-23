@@ -85,15 +85,17 @@ export function EvidencePanel({
           {bundle.excerpts.map((excerpt) => (
             <figure key={excerpt.id} className="rounded-xl border border-border bg-black/25 p-3">
               <figcaption className="flex items-center justify-between gap-2">
-                <span className="text-[11px] tracking-wide text-muted-foreground uppercase">
-                  {DOCUMENT_TYPE_LABEL[excerpt.documentType]}
-                </span>
-                <span className="font-mono text-[10px] text-muted-foreground">p.{excerpt.page}</span>
+                <span className="truncate font-mono text-[11px] text-foreground">{excerpt.documentName}</span>
+                <span className="shrink-0 font-mono text-[10px] text-muted-foreground">p.{excerpt.page}</span>
               </figcaption>
               <blockquote className="mt-2 text-sm leading-6 text-foreground/95">
                 <Highlighted text={excerpt.text} highlight={excerpt.highlight} />
               </blockquote>
-              <p className="mt-2 text-[11px] text-muted-foreground">{excerpt.section}</p>
+              {excerpt.documentType !== "other" ? (
+                <p className="mt-2 text-[11px] text-muted-foreground">{DOCUMENT_TYPE_LABEL[excerpt.documentType]} · {excerpt.section}</p>
+              ) : excerpt.section && excerpt.section !== excerpt.documentName ? (
+                <p className="mt-2 text-[11px] text-muted-foreground">{excerpt.section}</p>
+              ) : null}
             </figure>
           ))}
         </div>

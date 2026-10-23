@@ -84,7 +84,6 @@ export function useCase(caseId: string) {
       try {
         const next = await api.getStatus(caseId);
         if (cancelled) return;
-        setStatus(next);
         if (next.pipeline.phase === "ready") {
           const [nextResults, nextFindings, nextInsurance] = await Promise.all([
             api.getResults(caseId),
@@ -107,6 +106,7 @@ export function useCase(caseId: string) {
           setFindings([]);
           setInsurance(null);
         }
+        setStatus(next);
         setError(null);
       } catch (err) {
         if (!cancelled) setError(errorMessage(err, "This case could not be loaded."));
@@ -158,7 +158,7 @@ export function useCase(caseId: string) {
       setInsurance(null);
       setRun((value) => value + 1);
     } catch (err) {
-      setActionError(errorMessage(err, "The audit could not be started."));
+      setActionError(errorMessage(err, "The analysis could not be started."));
     } finally {
       setBusy(null);
     }
@@ -218,7 +218,7 @@ export function useCase(caseId: string) {
         const response = await api.ask(caseId, question);
         setStatus((current) => (current ? { ...current, messages: response.messages } : current));
       } catch (err) {
-        setActionError(errorMessage(err, "DocuMend could not answer that."));
+        setActionError(errorMessage(err, "DocuMend could not answer that question."));
         throw err;
       } finally {
         setBusy(null);

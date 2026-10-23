@@ -64,7 +64,9 @@ export function FindingsView({
         })}
       </div>
       {visible.length === 0 ? (
-        <p className="mt-8 text-sm text-muted-foreground">Nothing on this filter.</p>
+        <p className="mt-8 text-sm text-muted-foreground">
+          {findings.length === 0 ? "No discrepancies detected in the current document set." : "Nothing on this filter."}
+        </p>
       ) : (
         <div className="mt-5 space-y-3">
           {visible.map((finding) => (

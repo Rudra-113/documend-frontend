@@ -333,7 +333,7 @@ export const mockApi = {
     document.type = input.type;
     document.typeSource = "user";
     document.classificationConfidence = 1;
-    document.pageCount = pageCount(document.sizeBytes, document.mimeType, input.type);
+    document.pageCount = pageCount(document.sizeBytes ?? 0, document.mimeType, input.type);
     document.analysisVersion = null;
     record.updatedAt = new Date().toISOString();
     persist();

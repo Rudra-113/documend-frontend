@@ -33,13 +33,26 @@ export function FindingCard({
       <span className={`absolute inset-y-0 left-0 w-0.5 ${TONE[finding.severity]}`} aria-hidden />
       <div className="px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="kicker">{FINDING_TYPE_LABEL[finding.type]}</span>
+          <span className="kicker">{finding.typeLabel ?? FINDING_TYPE_LABEL[finding.type]}</span>
           <span className="text-muted-foreground">·</span>
           <span className="text-xs text-muted-foreground">{SEVERITY_LABEL[finding.severity]}</span>
-          <ConfidenceBadge value={finding.confidence} className="ml-auto" />
+          {finding.confidence != null ? <ConfidenceBadge value={finding.confidence} className="ml-auto" /> : null}
         </div>
         <h3 className="mt-2 text-base leading-snug text-foreground">{finding.title}</h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{finding.summary}</p>
+        {finding.evidenceNotes && finding.evidenceNotes.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {finding.evidenceNotes.map((note, index) => (
+              <li key={`${note.document}-${note.page}-${index}`} className="rounded-lg border border-border bg-black/20 px-3 py-2">
+                <p className="font-mono text-[11px] text-foreground">
+                  {note.document}
+                  <span className="text-muted-foreground"> · p.{note.page}</span>
+                </p>
+                {note.reason ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{note.reason}</p> : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {finding.impactAmount != null ? (
             <span className="font-mono text-sm text-foreground">{formatINR(finding.impactAmount)} exposure</span>

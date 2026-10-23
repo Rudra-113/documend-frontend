@@ -1,7 +1,14 @@
-import type { InsuranceAssessment } from "@/lib/types/domain";
-import { formatINR } from "@/lib/utils/format";
+import type { InsuranceAssessment, LiveLedgerFigures } from "@/lib/types/domain";
+import { formatINR, formatINROrDash, formatPercent } from "@/lib/utils/format";
 import { CoverageRow } from "@/components/insurance/CoverageRow";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+
+function ledgerHeading(ledger: LiveLedgerFigures) {
+  if (ledger.status === "estimated") return "Estimated from the documents";
+  if (ledger.status === "insufficient_documents") return "Bill or policy missing";
+  if (ledger.status === "needs_review") return "Needs review";
+  return "Insurance";
+}
 
 export function InsuranceView({
   insurance,
@@ -10,6 +17,42 @@ export function InsuranceView({
   insurance: InsuranceAssessment;
   onOpenFinding: (findingId: string) => void;
 }) {
+  if (insurance.ledger) {
+    const ledger = insurance.ledger;
+    const estimated = ledger.status === "estimated";
+    return (
+      <div className="space-y-6">
+        <div>
+          <p className="kicker">Insurance checker</p>
+          <h2 className="mt-1 font-serif text-3xl">{ledgerHeading(ledger)}</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{insurance.narrative}</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Bill total" value={formatINROrDash(estimated ? ledger.billTotal : null)} hint={estimated ? "Returned bill total" : "Not estimated"} />
+          <MetricCard label="Copay" value={formatPercent(estimated ? ledger.copayPercent : null)} hint={estimated ? "Returned copay" : "Not estimated"} />
+          <MetricCard
+            label="Estimated insurance share"
+            value={formatINROrDash(estimated ? ledger.insuranceShare : null)}
+            hint={estimated ? "Returned by the ledger" : "Waiting on the required documents"}
+            tone="sage"
+          />
+          <MetricCard
+            label="Estimated patient share"
+            value={formatINROrDash(estimated ? ledger.patientShare : null)}
+            hint={estimated ? "Returned by the ledger" : "Waiting on the required documents"}
+            tone="brass"
+          />
+        </div>
+        <section className="panel p-5">
+          <p className="kicker">{ledger.status === "estimated" ? "Disclaimer" : "What the ledger returned"}</p>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            {ledger.disclaimer ?? ledger.message ?? insurance.narrative}
+          </p>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">

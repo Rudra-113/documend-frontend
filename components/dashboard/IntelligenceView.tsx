@@ -1,5 +1,5 @@
 import type { CaseResults, Finding } from "@/lib/types/domain";
-import { formatDay, formatINR, formatStamp } from "@/lib/utils/format";
+import { formatDay, formatINR, formatINROrDash, formatPercent, formatStamp } from "@/lib/utils/format";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 
 function FaceRow({ label, value }: { label: string; value: string }) {
@@ -21,6 +21,8 @@ export function IntelligenceView({
   onOpenFinding: (findingId: string) => void;
 }) {
   const face = results.patient;
+  const ledger = results.ledger;
+  const estimated = ledger?.status === "estimated";
   const missing = findings.filter((finding) => finding.type === "missing_document" && finding.severity !== "info").length;
   const flagged = results.lineItems.filter((line) => line.findingIds.length > 0).length;
 
@@ -31,7 +33,7 @@ export function IntelligenceView({
         <div className="mt-3 flex items-end gap-4">
           <ScoreRing score={results.score} />
           <div>
-            <p className="font-serif text-5xl leading-none">{results.score}</p>
+            <p className="font-serif text-5xl leading-none">{results.score ?? "—"}</p>
             <p className="mt-1 text-sm text-muted-foreground">{results.scoreLabel}</p>
           </div>
         </div>
@@ -54,15 +56,26 @@ export function IntelligenceView({
 
       <div className="space-y-6 lg:col-span-8 lg:col-start-1 lg:row-start-1">
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Billed" value={formatINR(results.totals.billed)} hint="Sum of extracted charge lines" />
-          <MetricCard
-            label="Insurer position"
-            value={formatINR(results.totals.insurerApproved)}
-            hint={results.totals.coPay > 0 ? `After ${formatINR(results.totals.coPay)} co-pay` : "Schedule not applied"}
-            tone="sage"
-          />
-          <MetricCard label="Patient share" value={formatINR(results.totals.patientShare)} hint="Refused lines plus co-pay" tone="brass" />
-          <MetricCard label="Under review" value={formatINR(results.totals.underReview)} hint={`${missing} expected records still out`} tone="clay" />
+          {ledger ? (
+            <>
+              <MetricCard label="Bill total" value={formatINROrDash(estimated ? ledger.billTotal : null)} hint={`${ledger.documentCount} document${ledger.documentCount === 1 ? "" : "s"} on this case`} />
+              <MetricCard label="Copay" value={formatPercent(estimated ? ledger.copayPercent : null)} hint={ledger.status === "estimated" ? "Returned copay" : "Not estimated"} />
+              <MetricCard label="Estimated insurance share" value={formatINROrDash(estimated ? ledger.insuranceShare : null)} tone="sage" />
+              <MetricCard label="Estimated patient share" value={formatINROrDash(estimated ? ledger.patientShare : null)} tone="brass" />
+            </>
+          ) : (
+            <>
+              <MetricCard label="Billed" value={formatINR(results.totals.billed)} hint="Sum of extracted charge lines" />
+              <MetricCard
+                label="Insurer position"
+                value={formatINR(results.totals.insurerApproved)}
+                hint={results.totals.coPay > 0 ? `After ${formatINR(results.totals.coPay)} co-pay` : "Schedule not applied"}
+                tone="sage"
+              />
+              <MetricCard label="Patient share" value={formatINR(results.totals.patientShare)} hint="Refused lines plus co-pay" tone="brass" />
+              <MetricCard label="Under review" value={formatINR(results.totals.underReview)} hint={`${missing} expected records still out`} tone="clay" />
+            </>
+          )}
         </section>
 
         <section className="panel p-5">
@@ -97,7 +110,7 @@ export function IntelligenceView({
             </p>
           </div>
           {results.lineItems.length === 0 ? (
-            <p className="px-5 py-8 text-sm text-muted-foreground">Classify a hospital bill and re-analyze to build the ledger.</p>
+            <p className="px-5 py-8 text-sm text-muted-foreground">No charge lines were returned for this analysis.</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
@@ -169,11 +182,11 @@ export function IntelligenceView({
   );
 }
 
-function ScoreRing({ score }: { score: number }) {
+function ScoreRing({ score }: { score: number | null }) {
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (Math.max(0, Math.min(100, score)) / 100) * circumference;
-  const tone = score >= 70 ? "var(--sage)" : score >= 55 ? "var(--brass)" : "var(--clay)";
+  const offset = score == null ? circumference : circumference - (Math.max(0, Math.min(100, score)) / 100) * circumference;
+  const tone = score == null ? "var(--border)" : score >= 70 ? "var(--sage)" : score >= 55 ? "var(--brass)" : "var(--clay)";
   return (
     <svg viewBox="0 0 88 88" className="size-20 shrink-0" aria-hidden>
       <circle cx="44" cy="44" r={radius} fill="none" stroke="var(--border)" strokeWidth="5" />

@@ -18,18 +18,38 @@ export function DocumentCard({
   return (
     <article className="panel flex h-full flex-col p-4">
       <div className="flex items-start justify-between gap-3">
-        <p className="kicker">{DOCUMENT_TYPE_LABEL[document.type]}</p>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] ${pending ? "bg-brass/15 text-brass" : "bg-sage/15 text-sage"}`}>
-          {pending ? "Not in this audit" : document.analysisVersion ? `In v${document.analysisVersion}` : "Queued"}
+        <p className="kicker">{document.typeLabel ?? DOCUMENT_TYPE_LABEL[document.type]}</p>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] ${
+            document.processingState && /fail|error/i.test(document.processingState)
+              ? "bg-clay/15 text-clay"
+              : pending
+                ? "bg-brass/15 text-brass"
+                : "bg-sage/15 text-sage"
+          }`}
+        >
+          {document.processingState
+            ? document.processingState
+            : pending
+              ? "Not in this audit"
+              : document.analysisVersion
+                ? `In v${document.analysisVersion}`
+                : "On file"}
         </span>
       </div>
       <h3 className="mt-3 truncate text-sm" title={document.filename}>
         {document.filename}
       </h3>
       <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-        {document.pageCount} page{document.pageCount === 1 ? "" : "s"} · {formatBytes(document.sizeBytes)} ·{" "}
-        {formatConfidence(document.classificationConfidence)} match
+        {document.pageCount == null ? "Page count not returned" : `${document.pageCount} page${document.pageCount === 1 ? "" : "s"}`}
+        {document.sizeBytes != null ? ` · ${formatBytes(document.sizeBytes)}` : ""}
+        {document.classificationConfidence != null ? ` · ${formatConfidence(document.classificationConfidence)} match` : ""}
       </p>
+      {document.typeSource === "server" ? (
+        <p className="mt-4 text-xs text-muted-foreground">
+          Document type {document.typeLabel ?? DOCUMENT_TYPE_LABEL[document.type]}
+        </p>
+      ) : (
       <label className="mt-4 block text-xs text-muted-foreground">
         Document type
         <select
@@ -46,6 +66,8 @@ export function DocumentCard({
           ))}
         </select>
       </label>
+      )}
+      {document.typeSource === "server" ? null : (
       <button
         type="button"
         onClick={() => onRemove(document.id)}
@@ -54,6 +76,7 @@ export function DocumentCard({
       >
         Remove from case
       </button>
+      )}
     </article>
   );
 }

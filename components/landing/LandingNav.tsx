@@ -8,10 +8,17 @@ const LINKS = [
   { href: "#method", label: "Method" },
   { href: "#signals", label: "Signals" },
   { href: "#exhibit", label: "Exhibit" },
-  { href: "#open", label: "Open a case" },
 ];
 
-export function LandingNav({ mode }: { mode: "mock" | "live" }) {
+export function LandingNav({
+  mode,
+  opening = false,
+  onOpenCase,
+}: {
+  mode: "mock" | "live";
+  opening?: boolean;
+  onOpenCase: () => void;
+}) {
   const { scrollY } = useScroll();
   const [solid, setSolid] = useState(false);
   useMotionValueEvent(scrollY, "change", (value) => {
@@ -44,12 +51,22 @@ export function LandingNav({ mode }: { mode: "mock" | "live" }) {
           <p className="hidden font-mono text-[10px] tracking-[0.16em] text-muted-foreground uppercase sm:block">
             {mode === "mock" ? "Mock ledger · API ready" : "Live API"}
           </p>
-          <a
-            href="#open"
-            className="inline-flex h-9 items-center rounded-full bg-primary px-3.5 text-sm text-primary-foreground hover:bg-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          <button
+            type="button"
+            disabled={opening}
+            onClick={onOpenCase}
+            className="inline-flex h-9 items-center rounded-full px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-40"
           >
-            Begin
-          </a>
+            Open a case
+          </button>
+          <button
+            type="button"
+            disabled={opening}
+            onClick={onOpenCase}
+            className="inline-flex h-9 items-center rounded-full bg-primary px-3.5 text-sm text-primary-foreground hover:bg-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-40"
+          >
+            {opening ? "Opening..." : "Begin"}
+          </button>
         </div>
       </div>
     </header>

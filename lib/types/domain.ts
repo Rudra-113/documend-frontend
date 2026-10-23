@@ -7,6 +7,7 @@ export type DocumentType =
   | "receipt"
   | "pre_authorization"
   | "operative_notes"
+  | "claim_letter"
   | "other";
 
 export type Severity = "critical" | "high" | "medium" | "low" | "info";
@@ -17,7 +18,8 @@ export type FindingType =
   | "contradiction"
   | "missing_document"
   | "non_payable"
-  | "coverage_gap";
+  | "coverage_gap"
+  | "other";
 
 export type StageId =
   | "upload"
@@ -44,11 +46,13 @@ export interface DocumentRecord {
   caseId: string;
   filename: string;
   mimeType: string;
-  sizeBytes: number;
-  pageCount: number;
+  sizeBytes: number | null;
+  pageCount: number | null;
   type: DocumentType;
-  typeSource: "inferred" | "user";
-  classificationConfidence: number;
+  typeSource: "inferred" | "user" | "server";
+  typeLabel?: string | null;
+  classificationConfidence: number | null;
+  processingState?: string | null;
   addedAt: string;
   analysisVersion: number | null;
 }
@@ -137,14 +141,26 @@ export interface BillTotals {
   currency: "INR";
 }
 
+export interface LiveLedgerFigures {
+  status: string;
+  billTotal: number | null;
+  copayPercent: number | null;
+  insuranceShare: number | null;
+  patientShare: number | null;
+  disclaimer: string | null;
+  message: string | null;
+  documentCount: number;
+}
+
 export interface CaseResults {
   caseId: string;
   analysisVersion: number;
   generatedAt: string;
   patient: PatientFace;
   totals: BillTotals;
-  score: number;
+  score: number | null;
   scoreLabel: string;
+  ledger?: LiveLedgerFigures | null;
   narrative: string;
   breakdown: ScoreBreakdown[];
   lineItems: LineItem[];
@@ -160,7 +176,9 @@ export interface Finding {
   title: string;
   summary: string;
   impactAmount: number | null;
-  confidence: number;
+  confidence: number | null;
+  typeLabel?: string;
+  evidenceNotes?: Array<{ document: string; page: number; reason: string | null }>;
   documentIds: string[];
   lineItemIds: string[];
   recommendation: string;
@@ -229,6 +247,7 @@ export interface InsuranceAssessment {
   payableTotal: number;
   deniedTotal: number;
   reviewTotal: number;
+  ledger?: LiveLedgerFigures | null;
 }
 
 export interface Citation {

@@ -50,7 +50,7 @@ export function IntakeDock({
           ) : null}
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Button className="h-11 flex-1" disabled={submitting || queue.length === 0} onClick={onBegin}>
-              {submitting ? "Opening the case…" : "Begin analysis"}
+              {submitting ? "Analyzing..." : "Begin analysis"}
             </Button>
             <Button variant="outline" className="h-11" disabled={submitting} onClick={onSample}>
               Meridian sample
@@ -67,17 +67,21 @@ export function CaseIndex({
   cases,
   loading,
   error,
+  mode = "mock",
 }: {
   cases: CaseSummary[] | null;
   loading: boolean;
   error: string | null;
+  mode?: "mock" | "live";
 }) {
   return (
     <section id="cases" className="scroll-mt-24 px-4 pt-4 pb-24 md:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="font-serif text-3xl">Recent cases</h2>
-          <p className="text-xs text-muted-foreground">Kept in this browser until a FastAPI server is connected.</p>
+          <p className="text-xs text-muted-foreground">
+            {mode === "live" ? "Restored from the ledger for cases opened in this browser." : "Kept in this browser until a FastAPI server is connected."}
+          </p>
         </div>
         {loading ? <p className="mt-6 text-sm text-muted-foreground">Loading the ledger…</p> : null}
         {error ? (
@@ -85,7 +89,7 @@ export function CaseIndex({
             {error}
           </p>
         ) : null}
-        {!loading && cases && cases.length === 0 ? (
+        {!loading && !error && cases && cases.length === 0 ? (
           <p className="mt-6 text-sm text-muted-foreground">No cases yet. The first file you add becomes a case.</p>
         ) : null}
         {cases && cases.length > 0 ? (

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apiMode } from "@/lib/api/client";
 import { useCase } from "@/lib/hooks/use-case";
 import { formatINR } from "@/lib/utils/format";
-import { PHASE_LABEL } from "@/lib/utils/labels";
+import { DOCUMENT_TYPE_LABEL, PHASE_LABEL } from "@/lib/utils/labels";
 import { AnalysisTheater } from "@/components/analysis/AnalysisTheater";
 import { AskView } from "@/components/chat/AskView";
 import { IntelligenceView } from "@/components/dashboard/IntelligenceView";
@@ -34,6 +34,7 @@ export function CaseWorkspace({ params }: { params: Promise<{ caseId: string }> 
   const [view, setView] = useState<CaseView>("intelligence");
   const [addOpen, setAddOpen] = useState(false);
   const [queue, setQueue] = useState<QueuedFile[]>([]);
+  const [starting, setStarting] = useState(false);
   const [wide, setWide] = useState(false);
 
   useEffect(() => {
@@ -104,6 +105,25 @@ export function CaseWorkspace({ params }: { params: Promise<{ caseId: string }> 
     setAddOpen(false);
   }
 
+  async function beginAnalysis() {
+    if (starting || workspace.busy) return;
+    setStarting(true);
+    try {
+      if (queue.length > 0) {
+        await workspace.addDocuments(
+          queue.map((item) => item.file),
+          queue.map((item) => item.type),
+        );
+        setQueue([]);
+      }
+      await workspace.reanalyze();
+    } catch {
+      // The workspace surfaces the message.
+    } finally {
+      setStarting(false);
+    }
+  }
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="no-print sticky top-0 z-30 border-b border-border/80 bg-background/80 backdrop-blur-md">
@@ -119,7 +139,7 @@ export function CaseWorkspace({ params }: { params: Promise<{ caseId: string }> 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm">{status.case.title}</p>
               <p className="truncate font-mono text-[11px] text-muted-foreground">
-                {status.case.id} · {PHASE_LABEL[phase]}
+                {status.case.id} · {status.case.documentCount} document{status.case.documentCount === 1 ? "" : "s"} · {PHASE_LABEL[phase]}
                 {status.case.analysisVersion > 0 ? ` · v${status.case.analysisVersion}` : ""} · {mode === "mock" ? "Mock" : "Live"}
               </p>
             </div>
@@ -138,7 +158,7 @@ export function CaseWorkspace({ params }: { params: Promise<{ caseId: string }> 
               onClick={() => void workspace.reanalyze()}
               disabled={phase === "processing" || status.documents.length === 0 || workspace.busy === "analyze"}
             >
-              {workspace.busy === "analyze" || phase === "processing" ? "Re-analyzing…" : "Re-analyze"}
+              {workspace.busy === "analyze" || phase === "processing" ? "Re-analyzing..." : "Re-analyze"}
             </Button>
           </div>
         </div>
@@ -180,12 +200,55 @@ export function CaseWorkspace({ params }: { params: Promise<{ caseId: string }> 
             <h1 className="mt-2 font-serif text-4xl">The file is waiting</h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
               {status.documents.length === 0
-                ? "Add at least one document, then run the audit."
-                : `${status.documents.length} document${status.documents.length === 1 ? "" : "s"} on file. Nothing has been read yet.`}
+                ? "Upload a PDF, then begin analysis on this case."
+                : `${status.documents.length} document${status.documents.length === 1 ? "" : "s"} on this case. Nothing has been read yet.`}
+            </p>
+            {status.documents.length > 0 ? (
+              <ul className="mt-4 divide-y divide-border border-y border-border">
+                {status.documents.map((document) => (
+                  <li key={document.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span className="truncate">{document.filename}</span>
+                    <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+                      {document.typeLabel ?? DOCUMENT_TYPE_LABEL[document.type]}
+                      {document.pageCount != null ? ` · ${document.pageCount}p` : ""}
+                      {document.processingState ? ` · ${document.processingState}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <div className="mt-6">
+              <UploadDropzone
+                files={queue}
+                onChange={setQueue}
+                disabled={starting || workspace.busy != null}
+              />
+            </div>
+            <div className="mt-4">
+              <Button
+                onClick={() => void beginAnalysis()}
+                disabled={
+                  starting ||
+                  workspace.busy != null ||
+                  (status.documents.length === 0 && queue.length === 0)
+                }
+              >
+                {workspace.busy === "documents" ? "Uploading..." : starting || workspace.busy === "analyze" ? "Analyzing..." : "Begin analysis"}
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
+        {phase === "failed" ? (
+          <section className="mx-auto max-w-2xl">
+            <p className="kicker">Analysis</p>
+            <h1 className="mt-2 font-serif text-4xl">The reading stopped</h1>
+            <p role="alert" className="mt-3 text-sm leading-6 text-muted-foreground">
+              {status.pipeline.error ?? "The analysis could not be finished. The case is unchanged."}
             </p>
             <div className="mt-6">
-              <Button onClick={() => void workspace.reanalyze()} disabled={status.documents.length === 0 || workspace.busy === "analyze"}>
-                Run analysis
+              <Button onClick={() => void workspace.reanalyze()} disabled={workspace.busy === "analyze" || status.documents.length === 0}>
+                {workspace.busy === "analyze" ? "Re-analyzing..." : "Re-analyze"}
               </Button>
             </div>
           </section>
@@ -307,7 +370,7 @@ export function CaseWorkspace({ params }: { params: Promise<{ caseId: string }> 
             disabled={queue.length === 0 || workspace.busy === "documents"}
             onClick={() => void submitAdded()}
           >
-            {workspace.busy === "documents" ? "Adding…" : "Add to case"}
+            {workspace.busy === "documents" ? "Uploading..." : "Add to case"}
           </Button>
         </DialogContent>
       </Dialog>

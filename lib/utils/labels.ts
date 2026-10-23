@@ -16,6 +16,7 @@ export const DOCUMENT_TYPES: DocumentType[] = [
   "receipt",
   "pre_authorization",
   "operative_notes",
+  "claim_letter",
   "other",
 ];
 
@@ -28,6 +29,7 @@ export const DOCUMENT_TYPE_LABEL: Record<DocumentType, string> = {
   receipt: "Receipt",
   pre_authorization: "Pre-authorization",
   operative_notes: "Operative notes",
+  claim_letter: "Claim letter",
   other: "Unclassified",
 };
 
@@ -38,6 +40,7 @@ export const FINDING_TYPE_LABEL: Record<FindingType, string> = {
   missing_document: "Missing document",
   non_payable: "Non-payable",
   coverage_gap: "Coverage",
+  other: "Other",
 };
 
 export const SEVERITY_LABEL: Record<Severity, string> = {
@@ -86,6 +89,7 @@ export function inferDocumentType(filename: string): {
     [/policy|insurer|wording|schedule/, "insurance_policy", 0.86],
     [/receipt|pharmacy/, "receipt", 0.84],
     [/lab|diagnostic|pathology|radiology|\busg\b|\bmri\b|\bct\b|report/, "diagnostic_report", 0.8],
+    [/claim/, "claim_letter", 0.84],
     [/bill|invoice|charge|ledger|estimate/, "hospital_bill", 0.88],
   ];
   for (const [pattern, type, confidence] of rules) {

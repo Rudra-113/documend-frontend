@@ -6,6 +6,7 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { Button } from "@/components/ui/button";
 
 const SUGGESTIONS = [
+  "Which charges may not be covered by insurance?",
   "Why isn't insurance paying the full bill?",
   "What looks duplicated?",
   "Does the room charge match the discharge?",
@@ -57,7 +58,7 @@ export function AskView({
           ))}
         </div>
       )}
-      {asking ? <p className="text-sm text-muted-foreground">Reading the audit…</p> : null}
+      {asking ? <p className="text-sm text-muted-foreground">Investigating...</p> : null}
       <div className="flex flex-wrap gap-2">
         {SUGGESTIONS.map((suggestion) => (
           <button
@@ -99,7 +100,7 @@ export function AskView({
         <div className="flex items-center justify-between gap-3 px-2 pb-1">
           <p className="text-[11px] text-muted-foreground">Enter to send · Shift+Enter for a new line</p>
           <Button type="submit" disabled={asking || draft.trim().length === 0}>
-            {asking ? "Asking…" : "Ask"}
+            {asking ? "Investigating..." : "Ask"}
           </Button>
         </div>
       </form>

@@ -439,5 +439,6 @@ export const TYPE_PAGES = {
   receipt: 1,
   pre_authorization: 2,
   operative_notes: 2,
+  claim_letter: 2,
   other: 1,
 } as const;

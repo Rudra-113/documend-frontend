@@ -52,7 +52,7 @@ if (withNotes.findings.some((finding) => finding.id.endsWith("missing-operative_
 }
 const glove = withNotes.findings.find((finding) => finding.id.endsWith("qty-gloves"));
 const gloveBefore = output.findings.find((finding) => finding.id.endsWith("qty-gloves"));
-if (!glove || !gloveBefore || glove.confidence <= gloveBefore.confidence) {
+if (!glove || !gloveBefore || (glove.confidence ?? 0) <= (gloveBefore.confidence ?? 0)) {
   throw new Error("Operative notes should raise glove confidence");
 }
 

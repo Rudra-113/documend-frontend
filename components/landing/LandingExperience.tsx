@@ -17,6 +17,7 @@ export function LandingExperience({
   submitting,
   error,
   onBegin,
+  onOpenCase,
   onSample,
   cases,
   listLoading,
@@ -28,6 +29,7 @@ export function LandingExperience({
   submitting: boolean;
   error: string | null;
   onBegin: () => void;
+  onOpenCase: () => void;
   onSample: () => void;
   cases: CaseSummary[] | null;
   listLoading: boolean;
@@ -37,7 +39,7 @@ export function LandingExperience({
     <div className="relative flex flex-1 flex-col">
       <DriftGrid />
       <ScrollProgress />
-      <LandingNav mode={mode} />
+      <LandingNav mode={mode} opening={submitting} onOpenCase={onOpenCase} />
       <ChapterRail />
       <main id="content" className="relative z-10">
         <HeroStage />
@@ -48,7 +50,7 @@ export function LandingExperience({
         <SignalRail />
         <ExhibitBand onSample={onSample} submitting={submitting} />
         <IntakeDock queue={queue} onChange={onChange} submitting={submitting} error={error} onBegin={onBegin} onSample={onSample} />
-        <CaseIndex cases={cases} loading={listLoading} error={listError} />
+        <CaseIndex cases={cases} loading={listLoading} error={listError} mode={mode} />
       </main>
       <footer className="border-t border-border px-4 py-8 md:px-6">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">

@@ -6,6 +6,16 @@ export function formatINR(value: number) {
   }).format(value);
 }
 
+export function formatINROrDash(value: number | null | undefined) {
+  return value == null ? "—" : formatINR(value);
+}
+
+export function formatPercent(value: number | null | undefined) {
+  if (value == null) return "—";
+  const shown = value > 1 ? Math.round(value) : Math.round(value * 100);
+  return `${shown}%`;
+}
+
 export function formatNumber(value: number) {
   return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value);
 }
