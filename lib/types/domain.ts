@@ -73,6 +73,9 @@ export interface DocumentExtraction {
   procedures: string[];
   patientName: string | null;
   facility: string | null;
+  uhid: string | null;
+  payer: string | null;
+  policyNumber: string | null;
 }
 
 export interface PipelineStage {

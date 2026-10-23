@@ -8,7 +8,7 @@ import {
   getInsurance as getInsuranceRequest,
   uploadDocument,
 } from "@/lib/api/fastapi";
-import { asRecord, documentNodes, extractionFrom, numberOf, textOf, unwrapDocument } from "@/lib/api/normalize";
+import { asRecord, documentNodes, extractionFrom, insuranceRecord, numberOf, textOf, unwrapDocument } from "@/lib/api/normalize";
 import type { LedgerApi } from "@/lib/mock/api";
 import type {
   AskResponse,
@@ -321,7 +321,7 @@ function normalizeConfidence(value: unknown) {
 }
 
 function toLedger(payload: unknown, documentCount: number): LiveLedgerFigures {
-  const record = asRecord(payload);
+  const record = insuranceRecord(payload);
   const status = textOf(record, ["status"]) ?? "unknown";
   return {
     status,
@@ -349,18 +349,32 @@ function withBillTotal(ledger: LiveLedgerFigures | null | undefined, documents: 
   return { ...ledger, billTotal: ledger.billTotal ?? extracted };
 }
 
+function faceValue(documents: DocumentRecord[], pick: (extraction: NonNullable<DocumentRecord["extraction"]>) => string | null) {
+  const ordered = [
+    billSource(documents)?.extraction,
+    documents.find((document) => document.type === "insurance_policy")?.extraction,
+    ...documents.map((document) => document.extraction),
+  ];
+  for (const extraction of ordered) {
+    const value = extraction ? pick(extraction) : null;
+    if (value) return value;
+  }
+  return null;
+}
+
 function faceFrom(documents: DocumentRecord[]): PatientFace {
   const extraction = billSource(documents)?.extraction;
-  const face = emptyPatient();
-  if (!extraction) return face;
   return {
-    ...face,
-    name: extraction.patientName,
-    facility: extraction.facility,
-    admissionAt: extraction.dates[0] ?? null,
-    dischargeAt: extraction.dates[1] ?? null,
-    diagnosis: extraction.diagnosis,
-    procedure: extraction.procedures.length > 0 ? extraction.procedures.join(", ") : null,
+    ...emptyPatient(),
+    name: faceValue(documents, (item) => item.patientName),
+    facility: faceValue(documents, (item) => item.facility),
+    uhid: faceValue(documents, (item) => item.uhid),
+    payer: faceValue(documents, (item) => item.payer),
+    policyNumber: faceValue(documents, (item) => item.policyNumber),
+    admissionAt: extraction?.dates[0] ?? null,
+    dischargeAt: extraction?.dates[1] ?? null,
+    diagnosis: faceValue(documents, (item) => item.diagnosis),
+    procedure: extraction && extraction.procedures.length > 0 ? extraction.procedures.join(", ") : null,
   };
 }
 
